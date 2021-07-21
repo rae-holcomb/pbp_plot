@@ -6,7 +6,7 @@ Code to easily create pixel-by-pixel plots of TESS full frame images, with optio
 The core functions are stored in pbp_plot.py. See pbp_plot_demo.py for a short demonstration of how to use this code.
 More documentation coming soon!
 
-![image](https://user-images.githubusercontent.com/69921202/126462253-53879bb8-e865-4179-b275-1c38454c279f.png)
+![download-90](https://user-images.githubusercontent.com/69921202/126462570-5b7aafbd-a2c1-4e9b-82da-45c7f59704a3.png)
 
 
 Please direct questions to Rae Holcomb at rjholcom@uci.edu.
