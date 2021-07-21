@@ -2,8 +2,20 @@ import numpy as np
 import matplotlib.pyplot as plt
 import lightkurve as lk
 
-def download_tpf(target_name) :
-    return lk.search_targetpixelfile(target_name).download()
+def download_tpf(target_name, sector=None) :
+    """
+    Given the target name, i.e. 'TIC 233629963', 'TOI 1468', or 'LSPM J1835+3259', downloads the target pixel
+    file for the first available sector. If sector keyword is specified (as an integer), that sector only will
+    be retrieved. Multisector downloads are not currently supported.
+        Input:  target_name - string
+                sector - integer of which TESS sector you want
+        Output: tpf - a single sector lightkurve TargetPixelFile object 
+    """
+    if sector :
+        return lk.search_targetpixelfile(target_name, sector=sector).download()
+    else :
+        return lk.search_targetpixelfile(target_name).download()
+
 
 def plot_pixel_by_pixel(target_name, tpf, plot_type='lc', padding=1, x_lim=None, y_lim=None, save=False, figname=None) :
     """
@@ -163,6 +175,7 @@ def plot_pixel_by_pixel(target_name, tpf, plot_type='lc', padding=1, x_lim=None,
 
     # set up the subplots
     fig, axs = plt.subplots(ere-sre, ece-sce, figsize=[18,15])
+    fig.set_facecolor('white')
     plt.tight_layout()
 
     # add overall axes labels
