@@ -1,14 +1,12 @@
 ---------
 pbp_plot
 ---------
-Code to easily create pixel-by-pixel plots of TESS full frame images, with options to plot the either a portion of the light curve or a periodogram of the data. Currently, functionality is limited only to single sectors of data.
+Code to easily create pixel-by-pixel plots of TESS full frame images, with options to plot the either a portion of the light curve or a periodogram of the data. This tool is helpful for visualizing whether the source of a signal originates from inside or outside of a predefined aperture, and thus useful for identifying sources of contamination. Currently, functionality is limited only to single sectors of data.
 
 The core functions are stored in pbp_plot.py. See pbp_plot_demo.py for a short demonstration of how to use this code.
-More documentation coming soon!
-
 Please direct questions to Rae Holcomb at rjholcom@uci.edu.
 
-Package Requirements:
+**Package Requirements:**
 - numpy
 - matplotlib
 - lightkurve (https://github.com/lightkurve/lightkurve)
