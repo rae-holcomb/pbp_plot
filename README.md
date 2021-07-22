@@ -9,7 +9,7 @@ Please direct questions to Rae Holcomb at rjholcom@uci.edu.
 **Package Requirements:**
 - numpy
 - matplotlib
-- lightkurve (https://github.com/lightkurve/lightkurve)
+- lightkurve (Version 1.0.x, see: https://github.com/lightkurve/lightkurve)
 
 ![download-90](https://user-images.githubusercontent.com/69921202/126690923-0fdcfe9d-b039-403a-9fc9-ad84d26ceb33.png)
 
