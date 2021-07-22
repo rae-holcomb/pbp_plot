@@ -27,9 +27,10 @@ Functions
 * Inputs:  
     * target_name - string
     * sector - integer of which TESS sector you want
-* Outputs: 
-*   tpf - a single sector lightkurve TargetPixelFile object 
+* Outputs:
+   * tpf - a single sector lightkurve TargetPixelFile object 
     
+ 
 **plot_pixel_by_pixel(target_name, tpf, plot_type='lc', padding=1, x_lim=None, y_lim=None, save=False, figname=None)**
 * Creates a pixel-by-pixel plot of a tess target from the target pixel file. Subplots in blue are pixels inside the TESS pipeline aperture and those in red are outside it. Note that this code is best used for investigating signals of know duration or period, the plots are small so it is very helpful to know your x_lim before plotting. Note that this may run slowly, especially if a large aperture or padding is used.
 
@@ -40,3 +41,5 @@ Functions
     * x_lim - for 'lc' the BJD dates you want plotted. For 'periodogram' the range of period in days.
     * y_lim - the limits of the y-axis. If left blank with be scaled dynamically.
     * save - Boolean of whether you would like the plots saved to a file or not.
+* Outputs:
+   * none 
