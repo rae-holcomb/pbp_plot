@@ -1,6 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import lightkurve as lk
+from scipy import stats
+
+# number of seconds in a day
+day = 24*60*60
 
 def download_tpf(target_name, sector=None) :
     """
@@ -17,7 +21,7 @@ def download_tpf(target_name, sector=None) :
         return lk.search_targetpixelfile(target_name).download()
 
 
-def plot_pixel_by_pixel(target_name, tpf, plot_type='lc', padding=1, x_lim=None, y_lim=None, save=False, figname=None) :
+def plot_pixel_by_pixel(target_name, tpf, plot_type='lc', padding=1, x_lim=None, y_lim=None, bin=False, save=False, figname=None) :
     """
     Creates a pixel-by-pixel plot of a tess target from the target pixel file. Subplots
     in blue are pixels inside the TESS pipeline aperture and those in red are outside it.
@@ -33,7 +37,7 @@ def plot_pixel_by_pixel(target_name, tpf, plot_type='lc', padding=1, x_lim=None,
             y_lim - the limits of the y-axis. If left blank with be scaled dynamically.
             save - Boolean of whether you would like the plots saved to a file or not.
     """
-    def plot_lc(tpf, mask, ax=None, c='b', x_lim=x_lim, y_lim=y_lim) :
+    def plot_lc(tpf, mask, ax=None, c='b', x_lim=x_lim, y_lim=y_lim, bin=bin) :
         """
         Given a masked target pixel file, calculates the light curve and returns it to be
         plotted in a subplot of the pixel-by-pixel plot.
@@ -41,6 +45,7 @@ def plot_pixel_by_pixel(target_name, tpf, plot_type='lc', padding=1, x_lim=None,
                     mask - the associated aperture mask for the tpf
                     ax - the axes object to be plotted into
                     c - the color of the plot
+                    bin - if set to a float, bins the lc to time bins of that size in units of days. may run slowly
             Output: x, y - arrays to be plotted
         """
         ax = ax or plt.gca()
@@ -49,18 +54,25 @@ def plot_pixel_by_pixel(target_name, tpf, plot_type='lc', padding=1, x_lim=None,
         lc = tpf.to_lightcurve(aperture_mask=mask.astype(bool)).flatten()
         # bin_lc = lc.flatten(window_length=801).remove_outliers().bin(binsize=5)
 
+        # bin if needed
+        if bin:
+            time, flux = bin_lc(lc.time.value, lc.flux.value, bs=bin*60*60*24)
+        else:
+            time = lc.time.value
+            flux = lc.flux.value
+
         # do the plotting
-        ax.plot(lc.time,lc.flux, linestyle='', marker='.', c=c)
+        ax.plot(time,flux, linestyle='', marker='.', c=c)
 
         # set x axis window (currently in days)
         if x_lim :
             ax.set_xlim(x_lim)
         else :
-            x_lim = [lc.time[0], lc.time[-1]]
+            x_lim = [lc.time.value[0], lc.time.value[-1]]
             ax.set_xlim(x_lim)
         
         # set y axis window
-        x_mask = np.where((lc.time > x_lim[0]) & (lc.time < x_lim[1]))
+        x_mask = np.where((lc.time.value > x_lim[0]) & (lc.time.value < x_lim[1]))
         if y_lim :
             ax.set_ylim(y_lim)
         else :
@@ -68,7 +80,7 @@ def plot_pixel_by_pixel(target_name, tpf, plot_type='lc', padding=1, x_lim=None,
 
         return ax
 
-    def plot_periodogram(tpf, mask, ax=None, c='b', x_lim=x_lim, y_lim=y_lim):
+    def plot_periodogram(tpf, mask, ax=None, c='b', x_lim=x_lim, y_lim=y_lim, bin=bin):
         """
         Given a masked target pixel file, calculates the periodogram and returns it to be
         plotted in a subplot of the pixel-by-pixel plot.
@@ -132,13 +144,13 @@ def plot_pixel_by_pixel(target_name, tpf, plot_type='lc', padding=1, x_lim=None,
     # Check that the provided x_lim values are in range. If not, fix them.
     if plot_type == 'lc' :
         if not x_lim :
-            x_lim = [tpf[0].time, tpf[-1].time]
-        if x_lim[0] < tpf[0].time :
-            print('x_lim should be provided in BJD - 2457000 (BTJD). The valid date range for this system is ' + str([tpf[0].time, tpf[-1].time]) + '.')
-            x_lim[0] = tpf[0].time
-        if x_lim[1] > tpf[-1].time :
-            print('x_lim should be provided in BJD - 2457000 (BTJD). The valid date range for this system is ' + str([tpf[0].time, tpf[-1].time]) + '.')
-            x_lim[1] = tpf[-1].time
+            x_lim = [tpf[0].time.value, tpf[-1].time.value]
+        if x_lim[0] < tpf[0].time.value :
+            print('x_lim should be provided in BJD - 2457000 (BTJD). The valid date range for this system is ' + str([tpf[0].time.value, tpf[-1].time.value]) + '.')
+            x_lim[0] = tpf[0].time.value
+        if x_lim[1] > tpf[-1].time.value :
+            print('x_lim should be provided in BJD - 2457000 (BTJD). The valid date range for this system is ' + str([tpf[0].time.value, tpf[-1].time.value]) + '.')
+            x_lim[1] = tpf[-1].time.value
     elif plot_type == 'periodogram' :
         if not x_lim :
             print('x_lim for periodograms should be provided as a [min_period, max_period] in units of days.')
@@ -207,7 +219,7 @@ def plot_pixel_by_pixel(target_name, tpf, plot_type='lc', padding=1, x_lim=None,
     for i in range(sre, ere) :
         for j in range(sce,ece) : 
             # make aperture
-            apij = np.zeros(tpf.shape[1:], dtype=np.int)
+            apij = np.zeros(tpf.shape[1:], dtype=int)
             apij[i][j] = 1
 
             # plot the line
@@ -225,3 +237,33 @@ def plot_pixel_by_pixel(target_name, tpf, plot_type='lc', padding=1, x_lim=None,
     else :
         plt.show()
  
+def bin_lc(time, flux, flux_err=None, bs=120):
+    """
+    Bins a timeseries to the desired cadence. Works much faster than Lightkurve's built in binning function.
+
+    Args:
+        time (:obj:`array`): time stamps of the lightcurve.
+        flux (:obj:`array`): flux values of the lightcurve.
+        flux_err (:obj:`array`): flux error values of the lightcurve.
+        bs (:obj:`float`): the size of the bins, in units of seconds.
+
+    Returns:
+    Two parameters, or three if a flux_err is also provided.
+
+        - time_bin (:obj:`array`): binned time stamps of the lightcurve.
+        - flux_bin (:obj:`array`): binned flux values of the lightcurve.
+        - flux_err_bin (:obj:`array`): binned flux errors values of the lightcurve. Only returned if an array is passed to flux_err.
+    """
+    time_bin = np.arange(time[0], time[-1], bs/day)
+    flux_bin = stats.binned_statistic(time, flux, bins=time_bin)[0]
+
+    # If flux_err is populated, assume the errors combine as the root-mean-square
+    if flux_err is not None:
+        # define a function to calculate the root mean square error of each bin
+        rmse_func = (lambda x: np.sqrt(np.nansum(np.square(x))) / len(np.atleast_1d(x))
+                    if np.any(np.isfinite(x))
+                    else np.nan)
+        flux_err_bin = stats.binned_statistic(time, flux_err, statistic=rmse_func, bins=time_bin)[0]
+        return time_bin[:-1], flux_bin, flux_err_bin
+
+    return time_bin[:-1], flux_bin
